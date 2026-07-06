@@ -6,6 +6,7 @@ import com.payflow.payflow_service.event.PaymentEventProducer;
 import com.payflow.payflow_service.model.Payment;
 import com.payflow.payflow_service.model.PaymentStatus;
 import com.payflow.payflow_service.repository.PaymentRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -50,7 +51,9 @@ public class PaymentService {
         return paymentRepository.findAll();
     }
 
+    @Cacheable(value = "payments", key = "#id")
     public Optional<Payment> getPaymentById(String id) {
+        System.out.println("CACHE MISS — fetching paymentId=" + id + " from PostgreSQL");
         return paymentRepository.findById(id);
     }
 }

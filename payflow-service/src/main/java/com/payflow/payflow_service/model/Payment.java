@@ -2,13 +2,14 @@ package com.payflow.payflow_service.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
 @Table(name = "payments")
 @Data
-public class Payment {
+public class Payment implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

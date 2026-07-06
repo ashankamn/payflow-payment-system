@@ -1,6 +1,8 @@
 package com.payflow.payflow_service.service;
 
 import com.payflow.payflow_service.dto.CreatePaymentRequest;
+import com.payflow.payflow_service.event.PaymentEvent;
+import com.payflow.payflow_service.event.PaymentEventProducer;
 import com.payflow.payflow_service.model.Payment;
 import com.payflow.payflow_service.model.PaymentStatus;
 import com.payflow.payflow_service.repository.PaymentRepository;
@@ -13,9 +15,11 @@ import java.util.Optional;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final PaymentEventProducer paymentEventProducer;
 
-    public PaymentService(PaymentRepository paymentRepository) {
+    public PaymentService(PaymentRepository paymentRepository, PaymentEventProducer paymentEventProducer) {
         this.paymentRepository = paymentRepository;
+        this.paymentEventProducer = paymentEventProducer;
     }
 
     public Payment createPayment(CreatePaymentRequest request) {
@@ -26,7 +30,20 @@ public class PaymentService {
         payment.setCurrency(request.currency());
         payment.setStatus(PaymentStatus.PENDING);
 
-        return paymentRepository.save(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+
+        PaymentEvent event = new PaymentEvent(
+                savedPayment.getId(),
+                savedPayment.getSenderAccount(),
+                savedPayment.getReceiverAccount(),
+                savedPayment.getAmount(),
+                savedPayment.getCurrency(),
+                savedPayment.getStatus().name(),
+                savedPayment.getCreatedAt()
+        );
+        paymentEventProducer.publishPaymentEvent(event);
+
+        return savedPayment;
     }
 
     public List<Payment> getAllPayments() {
